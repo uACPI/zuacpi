@@ -24,3 +24,7 @@ zuacpi_module.addIncludePath(my_freestanding_c_headers_dir);
 
 kernel.addImport("zuacpi", zuacpi_module);
 ```
+
+Note that this is a work in progress and a number of uACPI functions are not 
+yet bouund in zuacpi - feel free to open a pull request if a function you need
+is missing!
