@@ -6,7 +6,7 @@ zuacpi is bindings for [uACPI](https://github.com/uACPI/uACPI), adopted from
 
 To use zuacpi, add it to your `build.zig.zon` manually or use `zig fetch`:
 
-`zig fetch --add=zuacpi git+https://github.com/Khitiara/zuacpi.git#master`
+`zig fetch --add=zuacpi git+https://github.com/uACPI/zuacpi#master`
 
 And add its module to your `build.zig`:
 
