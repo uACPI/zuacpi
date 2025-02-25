@@ -1,6 +1,5 @@
 const uacpi = @import("uacpi.zig");
 const acpi = @import("../acpi.zig");
-const arch = @import("../../arch/arch.zig");
 const util = @import("util");
 const namespace = @import("namespace.zig");
 
@@ -209,11 +208,11 @@ pub const Resources = extern struct {
         }
     }
 
-    extern fn uacpi_free_resources(r: *Resources) callconv(arch.cc) void;
+    extern fn uacpi_free_resources(r: *Resources) callconv(.c) void;
     pub const deinit = uacpi_free_resources;
 };
 
-extern fn uacpi_get_current_resources(n: *namespace.NamespaceNode, out_resources: **Resources) callconv(arch.cc) uacpi.uacpi_status;
+extern fn uacpi_get_current_resources(n: *namespace.NamespaceNode, out_resources: **Resources) callconv(.c) uacpi.uacpi_status;
 pub fn get_current_resources(node: *namespace.NamespaceNode) !*Resources {
     var r: *Resources = undefined;
     try uacpi_get_current_resources(node, &r).err();

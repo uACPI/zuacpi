@@ -1,10 +1,6 @@
 const std = @import("std");
 const sdt = @import("sdt.zig");
-const util = @import("util");
 const Gas = @import("gas.zig").Gas;
-const checksum = util.checksum;
-const acpi = @import("acpi.zig");
-const arch = @import("../arch/arch.zig");
 
 pub const Fadt = extern struct {
     header: sdt.SystemDescriptorTableHeader,

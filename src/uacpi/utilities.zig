@@ -1,6 +1,5 @@
 const uacpi = @import("uacpi.zig");
 const namespace = uacpi.namespace;
-const arch = @import("../../arch/arch.zig");
 const std = @import("std");
 
 pub const InterruptModel = enum(u32) {
@@ -9,7 +8,7 @@ pub const InterruptModel = enum(u32) {
     iosapic = 2,
 };
 
-extern fn uacpi_set_interrupt_model(InterruptModel) callconv(arch.cc) uacpi.uacpi_status;
+extern fn uacpi_set_interrupt_model(InterruptModel) callconv(.c) uacpi.uacpi_status;
 
 pub fn set_interrupt_model(model: InterruptModel) !void {
     try uacpi_set_interrupt_model(model).err();
@@ -72,10 +71,10 @@ pub const NamespaceNodeInfo = extern struct {
     cid: PnpIdList,
 };
 
-extern fn uacpi_free_namespace_node_info(info: *NamespaceNodeInfo) callconv(arch.cc) void;
+extern fn uacpi_free_namespace_node_info(info: *NamespaceNodeInfo) callconv(.c) void;
 pub const free_namespace_node_info = uacpi_free_namespace_node_info;
 
-extern fn uacpi_get_namespace_node_info(node: *namespace.NamespaceNode, out_info: **NamespaceNodeInfo) callconv(arch.cc) uacpi.uacpi_status;
+extern fn uacpi_get_namespace_node_info(node: *namespace.NamespaceNode, out_info: **NamespaceNodeInfo) callconv(.c) uacpi.uacpi_status;
 pub fn get_namespace_node_info(node: *namespace.NamespaceNode) error{OutOfMemory}!*NamespaceNodeInfo {
     var info: *NamespaceNodeInfo = undefined;
     try @as(error{OutOfMemory}!void, @errorCast(uacpi_get_namespace_node_info(node, &info).err()));

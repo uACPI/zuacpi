@@ -34,7 +34,7 @@ pub const UacpiLogLevel = enum {
     @"error",
 };
 
-pub fn build(b: *Build) !void {
+pub fn build(b: *Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
@@ -53,7 +53,7 @@ pub fn build(b: *Build) !void {
         "-nostdlib",
         "-DUACPI_SIZED_FREES",
         "-DUACPI_OVERRIDE_ARCH_HELPERS",
-        b.fmt("-DUACPI_DEFAULT_LOG_LEVEL=UACPI_LOG_{s}", .{std.ascii.toUpper(@tagName(uacpi_log_level))}),
+        b.fmt("-DUACPI_DEFAULT_LOG_LEVEL=UACPI_LOG_{s}", .{std.ascii.allocUpperString(b.allocator, @tagName(uacpi_log_level)) catch @panic("OOM")}),
     };
 
     module.addIncludePath(uacpi.path("include"));

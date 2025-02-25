@@ -35,7 +35,7 @@ pub const ObjectType = enum(u32) {
 
 pub const ObjectTypeBits = @import("util").EnumMask(ObjectType);
 
-pub const Object = opaque{};
+pub const Object = opaque {};
 
 pub const log_level = enum(u32) {
     err = 1,
@@ -204,7 +204,7 @@ pub const uacpi_status = enum(c_uint) {
     }
 };
 
-extern fn uacpi_setup_early_table_access(temporary_buffer: [*]u8, buffer_size: usize) uacpi_status;
+extern fn uacpi_setup_early_table_access(temporary_buffer: [*]u8, buffer_size: usize) callconv(.c) uacpi_status;
 pub inline fn setup_early_table_access(temporary_buffer: []u8) Error!void {
     return uacpi_setup_early_table_access(temporary_buffer.ptr, temporary_buffer.len).err();
 }
@@ -219,31 +219,32 @@ pub const uacpi_flags = packed struct(u64) {
     _: u58 = 0,
 };
 
-extern fn uacpi_initialize(flags: uacpi_flags) uacpi_status;
+extern fn uacpi_initialize(flags: uacpi_flags) callconv(.c) uacpi_status;
 pub inline fn initialize(flags: uacpi_flags) Error!void {
     return uacpi_initialize(flags).err();
 }
 
-extern fn uacpi_namespace_load() uacpi_status;
+extern fn uacpi_namespace_load() callconv(.c) uacpi_status;
 pub inline fn namespace_load() Error!void {
     return uacpi_namespace_load().err();
 }
 
-extern fn uacpi_namespace_initialize() uacpi_status;
+extern fn uacpi_namespace_initialize() callconv(.c) uacpi_status;
 pub inline fn namespace_initialize() Error!void {
     return uacpi_namespace_initialize().err();
 }
 
-pub extern fn uacpi_get_current_init_level() uacpi_init_level;
-extern fn uacpi_leave_acpi_mode() uacpi_status;
+extern fn uacpi_get_current_init_level() callconv(.c) uacpi_init_level;
+pub const get_current_init_level = uacpi_get_current_init_level;
+extern fn uacpi_leave_acpi_mode() callconv(.c) uacpi_status;
 pub inline fn leave_acpi_mode() Error!void {
     return uacpi_leave_acpi_mode().err();
 }
 
-extern fn uacpi_state_reset() void;
+extern fn uacpi_state_reset() callconv(.c) void;
 pub const state_reset = uacpi_state_reset;
 
-extern fn uacpi_status_to_string(uacpi_status) [*:0]const u8;
+extern fn uacpi_status_to_string(uacpi_status) callconv(.c) [*:0]const u8;
 pub const status_to_string = uacpi_status_to_string;
 
 pub const InterruptRet = enum(u32) {
@@ -251,7 +252,7 @@ pub const InterruptRet = enum(u32) {
     handled,
 };
 
-pub const InterruptHandler = *const fn (?*anyopaque) callconv(.C) InterruptRet;
+pub const InterruptHandler = *const fn (?*anyopaque) callconv(.c) InterruptRet;
 
 pub const FirmwareRequestType = enum(u8) {
     breakpoint,
@@ -288,4 +289,4 @@ pub const WorkType = enum(u32) {
     notification,
 };
 
-pub const WorkHandler = *const fn (?*anyopaque) callconv(.C) void;
+pub const WorkHandler = *const fn (?*anyopaque) callconv(.c) void;

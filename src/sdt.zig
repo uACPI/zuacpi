@@ -10,9 +10,9 @@ pub const Signature = enum(u32) {
     APIC = cast_signature("APIC"),
     MCFG = cast_signature("MCFG"),
     HPET = cast_signature("HPET"),
-    // FACP = cast_signature("FACP"),
-    // WAET = cast_signature("WAET"),
-    // BGRT = cast_signature("BGRT"),
+    FACP = cast_signature("FACP"),
+    WAET = cast_signature("WAET"),
+    BGRT = cast_signature("BGRT"),
     _,
 
     pub fn from_string(sig: *const [4]u8) Signature {
