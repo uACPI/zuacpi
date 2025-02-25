@@ -39,6 +39,7 @@ pub fn build(b: *Build) void {
     const optimize = b.standardOptimizeOption(.{});
 
     const uacpi_log_level = b.option(UacpiLogLevel, "log_level", "uACPI log level") orelse .info;
+    const override_arch_helpers = b.option(bool, "override_arch_helpers", "defines UACPI_OVERRIDE_ARCH_HELPERS. the kernel must provide uacpi_arch_helpers.h") orelse false;
 
     const uacpi = b.dependency("uacpi", .{});
 
@@ -48,18 +49,23 @@ pub fn build(b: *Build) void {
         .optimize = optimize,
     });
 
-    const uacpi_flags: []const []const u8 = &.{
+    var flags_list: std.ArrayList([]const u8) = .initCapacity(b.allocator, 5) catch @panic("OOM");
+
+    flags_list.appendSliceAssumeCapacity(&.{
         "-ffreestanding",
         "-nostdlib",
         "-DUACPI_SIZED_FREES",
-        "-DUACPI_OVERRIDE_ARCH_HELPERS",
         b.fmt("-DUACPI_DEFAULT_LOG_LEVEL=UACPI_LOG_{s}", .{std.ascii.allocUpperString(b.allocator, @tagName(uacpi_log_level)) catch @panic("OOM")}),
-    };
+    });
+
+    if (override_arch_helpers) {
+        flags_list.appendAssumeCapacity("-DUACPI_OVERRIDE_ARCH_HELPERS");
+    }
 
     module.addIncludePath(uacpi.path("include"));
     module.addCSourceFiles(.{
         .files = uacpi_src,
-        .flags = uacpi_flags,
+        .flags = flags_list.toOwnedSlice() catch @panic("OOM"),
         .root = uacpi.path("source"),
     });
 }
