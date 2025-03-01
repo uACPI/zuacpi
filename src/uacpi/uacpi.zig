@@ -33,7 +33,7 @@ pub const ObjectType = enum(u32) {
     buffer_index = 21,
 };
 
-pub const ObjectTypeBits = @import("util").EnumMask(ObjectType);
+pub const ObjectTypeBits = @import("../util.zig").EnumMask(ObjectType);
 
 pub const Object = opaque {};
 

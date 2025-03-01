@@ -49,7 +49,7 @@ pub fn build(b: *Build) void {
         .optimize = optimize,
     });
 
-    var flags_list: std.ArrayList([]const u8) = .initCapacity(b.allocator, 5) catch @panic("OOM");
+    var flags_list: std.ArrayList([]const u8) = std.ArrayList([]const u8).initCapacity(b.allocator, 5) catch @panic("OOM");
 
     flags_list.appendSliceAssumeCapacity(&.{
         "-ffreestanding",

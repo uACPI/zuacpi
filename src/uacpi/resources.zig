@@ -1,6 +1,4 @@
 const uacpi = @import("uacpi.zig");
-const acpi = @import("../acpi.zig");
-const util = @import("util");
 const namespace = @import("namespace.zig");
 
 pub const ResourceType = enum(u32) {
@@ -190,21 +188,15 @@ pub const Resources = extern struct {
     length: usize,
     entries: [*]u8, // actually a [*]ResourceNative but fucked up window struct indexer things apply
 
-    pub fn indexer(self: *Resources) util.WindowStructIndexerMut(ResourceNative) {
-        return util.WindowStructIndexerMut(ResourceNative){
-            .buf = self.entries[0..self.length],
-        };
-    }
-
     pub fn slice(self: *Resources, buf: []*Resource) []*Resource {
-        var idx = self.indexer();
-        var cur: *ResourceNative = idx.current();
+        var ptr = self.entries;
+        var cur: *ResourceNative = @ptrCast(ptr);
         var i: usize = 0;
         while (cur.typ != .end_tag) {
             buf[i] = cur.tagged();
             i += 1;
-            idx.advance(cur.length);
-            cur = idx.current();
+            ptr += cur.length;
+            cur = @ptrCast(ptr);
         }
     }
 

@@ -13,7 +13,7 @@ pub const Madt = extern struct {
     flags: MadtFlags,
 };
 
-const MadtEntryType = enum(u8) {
+pub const MadtEntryType = enum(u8) {
     local_apic = 0,
     io_apic,
     interrupt_source_override,
@@ -33,7 +33,7 @@ const MadtEntryType = enum(u8) {
     _,
 };
 
-const MadtEntryHeader = extern struct {
+pub const MadtEntryHeader = extern struct {
     type: MadtEntryType,
     length: u8,
 };
@@ -57,7 +57,7 @@ pub const MadtInterruptSourceFlags = packed struct(u16) {
     _: u12 = 0,
 };
 
-fn MadtEntryPayload(comptime t: MadtEntryType) type {
+pub fn MadtEntryPayload(comptime t: MadtEntryType) type {
     return switch (t) {
         .local_apic => extern struct {
             header: MadtEntryHeader,

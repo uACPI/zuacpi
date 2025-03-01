@@ -1,7 +1,7 @@
-const uacpi = @import("uacpi.zig");
-const acpi = @import("../../acpi/acpi.zig");
-const sdt = acpi.sdt;
-const fadt = acpi.fadt;
+const zuacpi = @import("../zuacpi.zig");
+const uacpi = zuacpi.uacpi;
+const sdt = zuacpi.sdt;
+const fadt = zuacpi.fadt;
 
 pub const uacpi_table = extern struct {
     location: extern union {

@@ -15,7 +15,7 @@ comptime {
 }
 
 pub const Options = struct {
-    allocator: std.mem.Allocator = std.heap.smp_allocator,
+    allocator: std.mem.Allocator = if (@import("builtin").target.os.tag == .freestanding) undefined else std.heap.smp_allocator,
 };
 
 const root = @import("root");
