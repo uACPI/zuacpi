@@ -146,40 +146,76 @@ pub const FixedIo = extern struct {
     length: u8,
 };
 
-pub const Resource: type = @Type(.{ .@"union" = .{
-    .layout = .auto,
-    .tag_type = ResourceType,
+pub const Resource = union(ResourceType) {
+    irq: *align(1) Irq,
+    extended_irq: *align(1) ExtendedIrq,
+
+    dma: *align(1) Dma,
+    fixed_dma: *align(1) FixedDma,
+
+    io: *align(1) Io,
+    fixed_io: *align(1) FixedIo,
+
+    addr16,
+    addr32,
+    addr64,
+    addr64_extended,
+    mem24,
+    mem32,
+    fixed_mem32,
+    start_dependent,
+    end_dependent,
+    vendor_small,
+    vendor_large,
+    generic_register,
+    gpio_connection,
+    serial_i2c,
+    serial_spi,
+    serial_uart,
+    serial_cs12,
+    pin_function,
+    pin_configuration,
+    pin_group,
+    pin_group_function,
+    pin_group_configuration,
+    clock_input,
+    end_tag,
+};
+
+const ResourceNativeUnion: type = @Type(.{ .@"union" = .{
+    .layout = .@"extern",
+    .tag_type = null,
     .decls = &.{},
     .fields = b: {
         const f = @typeInfo(Resource).@"union".fields;
         var f2: [f.len]@import("std").builtin.Type.UnionField = undefined;
         for (0..f.len) |i| {
-            const T = *f[i].type;
+            const T = switch (@typeInfo(f[i].type)) {
+                .pointer => |p| p.child,
+                .void => *struct {},
+                else => unreachable,
+            };
             f2[i] = .{
                 .name = f[i].name,
-                .alignment = @alignOf(T),
+                .alignment = 1,
                 .type = T,
             };
         }
+
         const f3 = f2;
         break :b &f3;
     },
 } });
 
 pub const ResourceNative = extern struct {
-    typ: ResourceType,
-    length: u32,
-    resource: extern union {
-        irq: Irq,
-        extended_irq: ExtendedIrq,
-
-        io: Io,
-        fixed_io: FixedIo,
-    },
+    typ: ResourceType align(1),
+    length: u32 align(1),
+    resource: ResourceNativeUnion,
 
     pub fn tagged(self: *ResourceNative) Resource {
         switch (self.typ) {
-            inline else => |t| return @unionInit(Resource, @tagName(t), &@field(self.resource, @tagName(t))),
+            .end_tag => unreachable,
+            inline else => |t| return if (@FieldType(Resource, @tagName(t)) == void) @unionInit(Resource, @tagName(t), {}) else @unionInit(Resource, @tagName(t), &@field(self.resource, @tagName(t))),
         }
     }
 };
@@ -188,16 +224,24 @@ pub const Resources = extern struct {
     length: usize,
     entries: [*]u8, // actually a [*]ResourceNative but fucked up window struct indexer things apply
 
-    pub fn slice(self: *Resources, buf: []*Resource) []*Resource {
-        var ptr = self.entries;
-        var cur: *ResourceNative = @ptrCast(ptr);
-        var i: usize = 0;
-        while (cur.typ != .end_tag) {
-            buf[i] = cur.tagged();
-            i += 1;
-            ptr += cur.length;
-            cur = @ptrCast(ptr);
+    pub const Iterator = struct {
+        remain_len: usize,
+        ptr: [*]u8,
+
+        pub fn next(self: *Iterator) ?Resource {
+            const native: *ResourceNative = @ptrCast(self.ptr);
+            if (native.typ == .end_tag or self.remain_len == 0) return null;
+            self.ptr += native.length;
+            self.remain_len -|= native.length;
+            return native.tagged();
         }
+    };
+
+    pub fn iterator(self: *const Resources) Iterator {
+        return .{
+            .remain_len = self.length,
+            .ptr = self.entries,
+        };
     }
 
     extern fn uacpi_free_resources(r: *Resources) callconv(.c) void;
@@ -205,9 +249,12 @@ pub const Resources = extern struct {
 };
 
 extern fn uacpi_get_current_resources(n: *namespace.NamespaceNode, out_resources: **Resources) callconv(.c) uacpi.uacpi_status;
-pub fn get_current_resources(node: *namespace.NamespaceNode) !*Resources {
+pub fn get_current_resources(node: *namespace.NamespaceNode) !?*Resources {
     var r: *Resources = undefined;
-    try uacpi_get_current_resources(node, &r).err();
+    uacpi_get_current_resources(node, &r).err() catch |err| switch (err) {
+        error.NotFound => return null,
+        else => return err,
+    };
     return r;
 }
 

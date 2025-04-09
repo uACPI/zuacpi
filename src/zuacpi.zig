@@ -10,14 +10,19 @@ pub const Gas = @import("gas.zig").Gas;
 
 const std = @import("std");
 
+const opts = @import("opts");
+
 comptime {
-    _ = @import("uacpi/shims.zig");
+    _ = @import("uacpi/barebones_shims.zig");
+    if (!opts.barebones) {
+        _ = @import("uacpi/shims.zig");
+    }
 }
 
 pub const Options = struct {
-    allocator: std.mem.Allocator = if (@import("builtin").target.os.tag == .freestanding) undefined else std.heap.smp_allocator,
+    allocator: if (opts.barebones) void else std.mem.Allocator,
 };
 
 const root = @import("root");
 
-pub const options: Options = if (@hasDecl(root, "zuacpi_options")) root.zuacpi_options else .{};
+pub const options: Options = if (@hasDecl(root, "zuacpi_options")) root.zuacpi_options else undefined;
