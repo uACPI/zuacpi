@@ -80,7 +80,7 @@ pub const Irq = extern struct {
     sharing: Sharing,
     wake_capability: WakeCapability,
     num_irqs: u8,
-    pub fn irqs(self: *Irq) []u8 {
+    pub fn irqs(self: *align(1) Irq) []u8 {
         return @as([*]u8, @ptrCast(self))[@sizeOf(Irq)..][0..self.num_irqs];
     }
 };
@@ -92,8 +92,8 @@ pub const ExtendedIrq = extern struct {
     wake_capability: WakeCapability,
     num_irqs: u8,
     source: ResoruceSource,
-    pub fn irqs(self: *ExtendedIrq) []u32 {
-        return @as([*]u32, @ptrCast(@as([*]u8, @ptrCast(self))[@sizeOf(ExtendedIrq)..]))[0..self.num_irqs];
+    pub fn irqs(self: *align(1) ExtendedIrq) []align(1) u32 {
+        return @as([*]align(1) u32, @ptrCast(@as([*]u8, @ptrCast(self))[@sizeOf(ExtendedIrq)..]))[0..self.num_irqs];
     }
 };
 pub const TransferType = enum(u8) {
@@ -130,12 +130,12 @@ pub const FixedDma = extern struct {
     channel: u16,
     transfer_width: TransferWidth,
 };
-pub const DecodeType = enum(u8) {
+pub const IoDecodeType = enum(u8) {
     decode_10,
     decode_16,
 };
 pub const Io = extern struct {
-    decode_type: DecodeType,
+    decode_type: IoDecodeType,
     minimum: u16,
     maximum: u16,
     alignment: u8,
@@ -144,6 +144,101 @@ pub const Io = extern struct {
 pub const FixedIo = extern struct {
     address: u16,
     length: u8,
+};
+
+pub const Caching = enum(u8) {
+    non_cacheable,
+    cacheable,
+    write_combining,
+    prefetchable,
+};
+
+pub const RangeType = enum(u8) {
+    memory,
+    reserved,
+    acpi,
+    nvs,
+};
+
+pub const MemTranslation = enum(u8) {
+    static,
+    translation,
+};
+
+pub const TranslationType = enum(u8) {
+    dense,
+    sparse,
+};
+
+pub const Direction = enum(u8) {
+    producer,
+    consumer,
+};
+
+pub const AddrDecodeType = enum(u8) {
+    positive,
+    subtractive,
+};
+
+pub const AddressAttribute = extern union {
+    memory: extern struct {
+        writeable: bool,
+        caching: Caching,
+        range_type: RangeType,
+        translation: MemTranslation,
+    },
+    io: extern struct {
+        range_type: RangeType,
+        translation: MemTranslation,
+        translation_type: TranslationType,
+    },
+    vendor_specific: u8,
+};
+
+pub const AddressCommon = extern struct {
+    attribute: AddressAttribute,
+    typ: enum(u8) {
+        memory,
+        io,
+        bus,
+        _,
+    },
+    direction: Direction,
+    decode_type: AddrDecodeType,
+    fixed_min_address: bool,
+    fixed_max_address: bool,
+};
+
+pub inline fn Address(I: type) type {
+    return extern struct {
+        common: AddressCommon,
+        granularity: I,
+        minimum: I,
+        maximum: I,
+        translation_offset: I,
+        address_length: I,
+        source: ResoruceSource,
+    };
+}
+
+pub const Addr64Extended = extern struct {
+    common: AddressCommon,
+    revision_id: u8,
+    granularity: u64,
+    minimum: u64,
+    maximum: u64,
+    translation_offset: u64,
+    address_length: u64,
+    attributes: u64,
+};
+
+pub const FixedMem32 = extern struct {
+    write_status: packed struct(u8) {
+        writeable: bool,
+        _: u7 = 0,
+    },
+    addr: u32,
+    length: u32,
 };
 
 pub const Resource = union(ResourceType) {
@@ -156,13 +251,13 @@ pub const Resource = union(ResourceType) {
     io: *align(1) Io,
     fixed_io: *align(1) FixedIo,
 
-    addr16,
-    addr32,
-    addr64,
-    addr64_extended,
+    addr16: *align(1) Address(u16),
+    addr32: *align(1) Address(u32),
+    addr64: *align(1) Address(u64),
+    addr64_extended: *align(1) Addr64Extended,
     mem24,
     mem32,
-    fixed_mem32,
+    fixed_mem32: *align(1) FixedMem32,
     start_dependent,
     end_dependent,
     vendor_small,
