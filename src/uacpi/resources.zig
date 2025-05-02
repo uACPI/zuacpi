@@ -74,7 +74,7 @@ pub const ResoruceSource = extern struct {
     string: [*:0]u8,
 };
 pub const Irq = extern struct {
-    length_kind: LengthKind,
+    length_kind: LengthKind align(@alignOf(usize)),
     trigger: Triggering,
     polarity: Polarity,
     sharing: Sharing,
@@ -85,15 +85,15 @@ pub const Irq = extern struct {
     }
 };
 pub const ExtendedIrq = extern struct {
-    direction: u8,
+    direction: u8 align(@alignOf(usize)),
     trigger: Triggering,
     polarity: Polarity,
     sharing: Sharing,
     wake_capability: WakeCapability,
     num_irqs: u8,
     source: ResoruceSource,
-    pub fn irqs(self: *align(1) ExtendedIrq) []align(1) u32 {
-        return @as([*]align(1) u32, @ptrCast(@as([*]u8, @ptrCast(self))[@sizeOf(ExtendedIrq)..]))[0..self.num_irqs];
+    pub fn irqs(self: *ExtendedIrq) []u32 {
+        return @as([*]u32, @ptrCast(@as([*]align(4) u8, @ptrCast(self))[@sizeOf(ExtendedIrq)..]))[0..self.num_irqs];
     }
 };
 pub const TransferType = enum(u8) {
@@ -116,7 +116,7 @@ pub const TransferWidth = enum(u8) {
     @"256",
 };
 pub const Dma = extern struct {
-    transfer_type: TransferType,
+    transfer_type: TransferType align(@alignOf(usize)),
     bus_master_status: bool,
     channel_speed: ChannelSpeed,
     num_channels: u8,
@@ -126,7 +126,7 @@ pub const Dma = extern struct {
     }
 };
 pub const FixedDma = extern struct {
-    request_line: u16,
+    request_line: u16 align(@alignOf(usize)),
     channel: u16,
     transfer_width: TransferWidth,
 };
@@ -135,14 +135,14 @@ pub const IoDecodeType = enum(u8) {
     decode_16,
 };
 pub const Io = extern struct {
-    decode_type: IoDecodeType,
+    decode_type: IoDecodeType align(@alignOf(usize)),
     minimum: u16,
     maximum: u16,
     alignment: u8,
     length: u8,
 };
 pub const FixedIo = extern struct {
-    address: u16,
+    address: u16 align(@alignOf(usize)),
     length: u8,
 };
 
@@ -211,7 +211,7 @@ pub const AddressCommon = extern struct {
 
 pub inline fn Address(I: type) type {
     return extern struct {
-        common: AddressCommon,
+        common: AddressCommon align(@alignOf(usize)),
         granularity: I,
         minimum: I,
         maximum: I,
@@ -222,7 +222,7 @@ pub inline fn Address(I: type) type {
 }
 
 pub const Addr64Extended = extern struct {
-    common: AddressCommon,
+    common: AddressCommon align(@alignOf(usize)),
     revision_id: u8,
     granularity: u64,
     minimum: u64,
@@ -236,28 +236,28 @@ pub const FixedMem32 = extern struct {
     write_status: packed struct(u8) {
         writeable: bool,
         _: u7 = 0,
-    },
+    } align(@alignOf(usize)),
     addr: u32,
     length: u32,
 };
 
 pub const Resource = union(ResourceType) {
-    irq: *align(1) Irq,
-    extended_irq: *align(1) ExtendedIrq,
+    irq: *Irq,
+    extended_irq: *ExtendedIrq,
 
-    dma: *align(1) Dma,
-    fixed_dma: *align(1) FixedDma,
+    dma: *Dma,
+    fixed_dma: *FixedDma,
 
-    io: *align(1) Io,
-    fixed_io: *align(1) FixedIo,
+    io: *Io,
+    fixed_io: *FixedIo,
 
-    addr16: *align(1) Address(u16),
-    addr32: *align(1) Address(u32),
-    addr64: *align(1) Address(u64),
-    addr64_extended: *align(1) Addr64Extended,
+    addr16: *Address(u16),
+    addr32: *Address(u32),
+    addr64: *Address(u64),
+    addr64_extended: *Addr64Extended,
     mem24,
     mem32,
-    fixed_mem32: *align(1) FixedMem32,
+    fixed_mem32: *FixedMem32,
     start_dependent,
     end_dependent,
     vendor_small,
@@ -292,7 +292,7 @@ const ResourceNativeUnion: type = @Type(.{ .@"union" = .{
             };
             f2[i] = .{
                 .name = f[i].name,
-                .alignment = 1,
+                .alignment = @alignOf(usize),
                 .type = T,
             };
         }
@@ -303,8 +303,8 @@ const ResourceNativeUnion: type = @Type(.{ .@"union" = .{
 } });
 
 pub const ResourceNative = extern struct {
-    typ: ResourceType align(1),
-    length: u32 align(1),
+    typ: ResourceType align(@alignOf(usize)),
+    length: u32,
     resource: ResourceNativeUnion,
 
     pub fn tagged(self: *ResourceNative) Resource {
@@ -317,16 +317,16 @@ pub const ResourceNative = extern struct {
 
 pub const Resources = extern struct {
     length: usize,
-    entries: [*]u8, // actually a [*]ResourceNative but fucked up window struct indexer things apply
+    entries: [*] align(@alignOf(usize)) u8, // actually a [*]ResourceNative but fucked up window struct indexer things apply
 
     pub const Iterator = struct {
         remain_len: usize,
-        ptr: [*]u8,
+        ptr: [*] align(@alignOf(usize)) u8,
 
         pub fn next(self: *Iterator) ?Resource {
             const native: *ResourceNative = @ptrCast(self.ptr);
             if (native.typ == .end_tag or self.remain_len == 0) return null;
-            self.ptr += native.length;
+            self.ptr = @alignCast(self.ptr + native.length);
             self.remain_len -|= native.length;
             return native.tagged();
         }
