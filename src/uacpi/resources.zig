@@ -277,30 +277,22 @@ pub const Resource = union(ResourceType) {
     end_tag,
 };
 
-const ResourceNativeUnion: type = @Type(.{ .@"union" = .{
-    .layout = .@"extern",
-    .tag_type = null,
-    .decls = &.{},
-    .fields = b: {
-        const f = @typeInfo(Resource).@"union".fields;
-        var f2: [f.len]@import("std").builtin.Type.UnionField = undefined;
-        for (0..f.len) |i| {
-            const T = switch (@typeInfo(f[i].type)) {
-                .pointer => |p| p.child,
-                .void => *struct {},
-                else => unreachable,
-            };
-            f2[i] = .{
-                .name = f[i].name,
-                .alignment = @alignOf(usize),
-                .type = T,
-            };
-        }
-
-        const f3 = f2;
-        break :b &f3;
-    },
-} });
+const ResourceNativeUnion: type = b: {
+    const f = @typeInfo(Resource).@"union".fields;
+    var names: [f.len][]const u8 = undefined;
+    var types: [f.len]type = undefined;
+    var attrs: [f.len]@import("std").builtin.Type.UnionField.Attributes = undefined;
+    for (f, &names, &types, &attrs) |fld, *name, *typ, *attr| {
+        typ.* = switch (@typeInfo(fld.type)) {
+            .pointer => |p| p.child,
+            .void => *struct {},
+            else => unreachable,
+        };
+        name.* = fld.name;
+        attr.* = .{.@"align" = @alignOf(usize)};
+    }
+    break :b @Union(.@"extern", null, names, types, attrs);
+};
 
 pub const ResourceNative = extern struct {
     typ: ResourceType align(@alignOf(usize)),
