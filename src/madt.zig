@@ -43,7 +43,7 @@ pub const MadtEntryType = enum(u8) {
     io_apic,
     interrupt_source_override,
     nmi_source,
-    local_nmi,
+    lapic_nmi,
     local_apic_addr_override,
     io_sapic,
     local_sapic,
@@ -113,7 +113,7 @@ pub fn MadtEntryPayload(comptime t: MadtEntryType) type {
                 _: u30,
             },
         },
-        .local_nmi => extern struct {
+        .lapic_nmi => extern struct {
             header: MadtEntryHeader align(4),
             processor_uid: u8,
             flags: MadtInterruptSourceFlags align(1),
