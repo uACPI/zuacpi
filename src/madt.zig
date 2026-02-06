@@ -75,6 +75,10 @@ pub const AcpiTrigger = enum(u2) {
     reserved,
     level_triggered,
 };
+pub const GiccInterruptMode = enum(u1) {
+    level,
+    edge,
+};
 
 pub const MadtInterruptSourceFlags = packed struct(u16) {
     polarity: AcpiPolarity,
@@ -135,6 +139,32 @@ pub fn MadtEntryPayload(comptime t: MadtEntryType) type {
             source: u8,
             gsi: u32,
             flags: MadtInterruptSourceFlags align(1),
+        },
+        .gic_cpu_interface => extern struct {
+            header: MadtEntryHeader,
+            gic_cpu_iface_number: u32,
+            processor_uid: u32,
+            flags: packed struct(u32) {
+                enabled: bool,
+                perf_interrupt_mode: GiccInterruptMode,
+                vgic_maintenance_interrupt_mode: GiccInterruptMode,
+                online_capable: bool,
+                gicr_non_coherent: bool,
+                _: u27 = 0,
+            },
+            parking_proto_version: u32,
+            perf_interrupt_gsi: u32,
+            parked_address: u64,
+            physical_base_address: u64,
+            gicv_registers: u64,
+            gich_registers: u64,
+            vgic_maintenance_interrupt: u32,
+            gicr_base_address: u64 align(4),
+            mpidr: u64 align(4),
+            power_eff_class: u8,
+            _: u8 = 0,
+            spe_ovflw_interrupt: u16,
+            trbe_interrupt: u16,
         },
         else => extern struct {
             header: MadtEntryHeader,
