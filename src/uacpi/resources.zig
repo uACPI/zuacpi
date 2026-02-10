@@ -344,7 +344,3 @@ pub fn get_current_resources(node: *namespace.NamespaceNode) !?*Resources {
     };
     return r;
 }
-
-comptime {
-    @import("std").testing.refAllDeclsRecursive(@This());
-}
