@@ -3,6 +3,33 @@ const sdt = @import("sdt.zig");
 const Gas = @import("gas.zig").Gas;
 
 pub const Fadt = extern struct {
+    pub const FixedFlags = packed struct(u32) {
+        wbinvd: bool,
+        wbinvd_flush: bool,
+        proc_c1: bool,
+        p_lvl2_up: bool,
+        pwr_button: bool,
+        slp_button: bool,
+        fix_rtc: bool,
+        rtc_s4: bool,
+        tmr_val_ext: bool,
+        dck_cap: bool,
+        reset_reg_sup: bool,
+        sealed_case: bool,
+        headless: bool,
+        cpu_sw_slp: bool,
+        pci_exp_wak: bool,
+        use_platform_clock: bool,
+        s4_rtc_sts_valid: bool,
+        remote_power_on_capable: bool,
+        force_apic_cluster_model: bool,
+        force_apic_physical_dest_mode: bool,
+        hw_reduced: bool,
+        low_power_s0_idle_capable: bool,
+        persistent_cpu_caches: u2,
+        _: u8 = 0,
+    };
+
     header: sdt.SystemDescriptorTableHeader,
     firmware_ctrl: u32,
     dsdt: u32,
@@ -51,7 +78,7 @@ pub const Fadt = extern struct {
     century: u8,
     iapc_boot_arch: u8,
     _2: u8 = 0,
-    flags: u32,
+    flags: FixedFlags,
     reset_reg: Gas,
     reset_value: u8,
     arm_boot_arch: u16 align(1),
