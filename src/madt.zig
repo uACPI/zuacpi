@@ -39,28 +39,29 @@ pub const Madt = extern struct {
 };
 
 pub const MadtEntryType = enum(u8) {
-    local_apic = 0,
-    io_apic,
-    interrupt_source_override,
-    nmi_source,
-    lapic_nmi,
-    local_apic_addr_override,
-    io_sapic,
-    local_sapic,
-    platform_interrupt_sources,
-    proc_local_x2apic,
-    local_x2apic_nmi,
-    gic_cpu_interface,
-    gic_msi_frame,
-    gic_redistributor,
-    gic_interrupt_translation_service,
-    multiprocessor_wakeup,
+    local_apic = 0x0,
+    io_apic = 0x1,
+    interrupt_source_override = 0x2,
+    nmi_source = 0x3,
+    lapic_nmi = 0x4,
+    local_apic_addr_override = 0x5,
+    io_sapic = 0x6,
+    local_sapic = 0x7,
+    platform_interrupt_sources = 0x8,
+    proc_local_x2apic = 0x9,
+    local_x2apic_nmi = 0xA,
+    gic_cpu_interface = 0xB,
+    gic_distributor = 0xC,
+    gic_msi_frame = 0xD,
+    gic_redistributor = 0xE,
+    gic_interrupt_translation_service = 0xF,
+    multiprocessor_wakeup = 0x10,
     _,
 };
 
 pub const MadtEntryHeader = extern struct {
-    type: MadtEntryType,
-    length: u8,
+    type: MadtEntryType align(1),
+    length: u8 align(1),
 };
 
 pub const AcpiPolarity = enum(u2) {
@@ -165,6 +166,22 @@ pub fn MadtEntryPayload(comptime t: MadtEntryType) type {
             _: u8 = 0,
             spe_ovflw_interrupt: u16,
             trbe_interrupt: u16,
+        },
+        .gic_distributor => extern struct {
+            header: MadtEntryHeader,
+            gicd_id: u32,
+            base_addr: u64,
+            sys_vector_base: u32 = 0,
+            gic_version: u8,
+        },
+        .gic_redistributor => extern struct {
+            header: MadtEntryHeader,
+            flags: packed struct(u8) {
+                non_coherent: bool,
+                _: u7 = 0,
+            } align(1),
+            discovery_base_addr: u64 align(4),
+            discovery_length: u32,
         },
         else => extern struct {
             header: MadtEntryHeader,
