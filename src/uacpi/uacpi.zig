@@ -210,6 +210,9 @@ pub inline fn setup_early_table_access(temporary_buffer: []u8) Error!void {
     return uacpi_setup_early_table_access(temporary_buffer.ptr, temporary_buffer.len).err();
 }
 
+extern fn uacpi_table_subsystem_available() callconv(.c) bool;
+pub const table_subsystem_available = uacpi_table_subsystem_available;
+
 pub const uacpi_flags = packed struct(u64) {
     bad_csum_fatal: bool = false,
     bad_tbl_sig_fatal: bool = false,
@@ -247,6 +250,13 @@ pub const state_reset = uacpi_state_reset;
 
 extern fn uacpi_status_to_string(uacpi_status) callconv(.c) [*:0]const u8;
 pub const status_to_string = uacpi_status_to_string;
+
+extern fn uacpi_is_platform_reduced_hardware(*bool) callconv(.c) uacpi_status;
+pub inline fn is_platform_reduced_hardware() Error!bool {
+    var b: bool = false;
+    try uacpi_is_platform_reduced_hardware(&b).err();
+    return b;
+}
 
 pub const InterruptRet = enum(u32) {
     not_handled,
