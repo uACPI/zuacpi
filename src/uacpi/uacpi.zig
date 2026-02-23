@@ -5,6 +5,7 @@ pub const namespace = @import("namespace.zig");
 pub const eval = @import("eval.zig");
 pub const resources = @import("resources.zig");
 pub const object = @import("object.zig");
+pub const sleep = @import("sleep.zig");
 
 comptime {
     _ = resources;
