@@ -38,7 +38,7 @@ pub const PnpIdList = extern struct {
         return @as([*]IdString, @ptrCast(@as([*]u8, @ptrCast(self)) + @sizeOf(PnpIdList)))[0..self.count];
     }
     pub fn ids_const(self: *const PnpIdList) []const IdString {
-        return @as([*]const IdString, @alignCast(@ptrCast(@as([*]const u8, @ptrCast(self)) + @sizeOf(PnpIdList))))[0..self.count];
+        return @as([*]const IdString, @ptrCast(@alignCast(@as([*]const u8, @ptrCast(self)) + @sizeOf(PnpIdList))))[0..self.count];
     }
     pub fn dupe(self: *const PnpIdList, alloc: std.mem.Allocator) ![]const []const u8 {
         const slc = try alloc.alloc([]const u8, self.count);

@@ -289,7 +289,7 @@ const ResourceNativeUnion: type = b: {
             else => unreachable,
         };
         name.* = fld.name;
-        attr.* = .{.@"align" = @alignOf(usize)};
+        attr.* = .{ .@"align" = @alignOf(usize) };
     }
     break :b @Union(.@"extern", null, names, types, attrs);
 };
@@ -309,11 +309,11 @@ pub const ResourceNative = extern struct {
 
 pub const Resources = extern struct {
     length: usize,
-    entries: [*] align(@alignOf(usize)) u8, // actually a [*]ResourceNative but fucked up window struct indexer things apply
+    entries: [*]align(@alignOf(usize)) u8, // actually a [*]ResourceNative but fucked up window struct indexer things apply
 
     pub const Iterator = struct {
         remain_len: usize,
-        ptr: [*] align(@alignOf(usize)) u8,
+        ptr: [*]align(@alignOf(usize)) u8,
 
         pub fn next(self: *Iterator) ?Resource {
             const native: *ResourceNative = @ptrCast(self.ptr);

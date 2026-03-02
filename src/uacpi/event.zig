@@ -12,7 +12,7 @@ pub const FixedEvent = enum(u32) {
     rtc,
 };
 
-extern fn uacpi_install_fixed_event_handler(event: FixedEvent, handler: uacpi.InterruptHandler, context: ?*anyopaque)callconv(.c)  uacpi.uacpi_status;
+extern fn uacpi_install_fixed_event_handler(event: FixedEvent, handler: uacpi.InterruptHandler, context: ?*anyopaque) callconv(.c) uacpi.uacpi_status;
 
 pub fn install_fixed_event_handler(event: FixedEvent, handler: uacpi.InterruptHandler, context: ?*anyopaque) !void {
     try uacpi_install_fixed_event_handler(event, handler, context).err();
