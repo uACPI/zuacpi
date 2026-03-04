@@ -41,6 +41,9 @@ pub const NamespaceNode = opaque {
 
     extern fn uacpi_namespace_node_get_object(node: *const NamespaceNode) callconv(.c) ?*uacpi.Object;
     pub const get_object = uacpi_namespace_node_get_object;
+
+    extern fn uacpi_namespace_node_parent(node: *NamespaceNode) callconv(.c) ?*NamespaceNode;
+    pub const get_parent = uacpi_namespace_node_parent;
 };
 
 extern fn uacpi_namespace_node_next(parent: *NamespaceNode, iter: *?*NamespaceNode) callconv(.c) uacpi.uacpi_status;
@@ -52,9 +55,9 @@ pub fn node_next(parent: *NamespaceNode, iter: *?*NamespaceNode) !?*NamespaceNod
     return iter.*;
 }
 
-extern fn uacpi_namespace_node_next_typed(parent: *NamespaceNode, iter: *?*NamespaceNode, types: uacpi.ObjectTypeBits) callconv(.c) uacpi.uacpi_status;
-pub fn node_next_typed(parent: *NamespaceNode, iter: *?*NamespaceNode, types: uacpi.ObjectTypeBits) !?*NamespaceNode {
-    uacpi_namespace_node_next_typed(parent, iter, types).err() catch |err| switch (err) {
+extern fn uacpi_namespace_node_next_typed(parent: *NamespaceNode, iter: *?*NamespaceNode, types: u32) callconv(.c) uacpi.uacpi_status;
+pub fn node_next_typed(parent: *NamespaceNode, iter: *?*NamespaceNode, types: uacpi.ObjectTypeSet) !?*NamespaceNode {
+    uacpi_namespace_node_next_typed(parent, iter, types.bits.mask).err() catch |err| switch (err) {
         error.NotFound => return null,
         else => return err,
     };

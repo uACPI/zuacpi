@@ -34,7 +34,9 @@ pub const ObjectType = enum(u32) {
     buffer_index = 21,
 };
 
-pub const ObjectTypeBits = @TypeOf(std.EnumSet(ObjectType).initEmpty().bits);
+pub const ObjectTypeIndexer = std.enums.EnumIndexer(ObjectType);
+pub const ObjectTypeSet = std.EnumSet(ObjectType);
+pub const ObjectTypeBits = @TypeOf(ObjectTypeSet.initEmpty().bits);
 
 pub const Object = opaque {};
 
