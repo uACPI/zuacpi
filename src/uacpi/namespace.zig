@@ -1,4 +1,5 @@
 const uacpi = @import("uacpi.zig");
+const std = @import("std");
 
 pub const IterationDecision = enum(u32) {
     @"continue" = 0,
@@ -30,7 +31,9 @@ pub const NamespaceNode = opaque {
     pub const name = uacpi_namespace_node_name;
 
     extern fn uacpi_namespace_node_generate_absolute_path(node: *const NamespaceNode) callconv(.c) ?[*:0]const u8;
-    pub const generate_absolute_path = uacpi_namespace_node_generate_absolute_path;
+    pub fn generate_absolute_path(node: *const NamespaceNode) error{OutOfMemory}![:0]const u8 {
+        return std.mem.span(uacpi_namespace_node_generate_absolute_path(node) orelse return error.OutOfMemory);
+    }
 
     extern fn uacpi_namespace_node_type(node: *const NamespaceNode, out_type: *uacpi.ObjectType) callconv(.c) uacpi.uacpi_status;
     pub fn node_type(node: *const NamespaceNode) !uacpi.ObjectType {
