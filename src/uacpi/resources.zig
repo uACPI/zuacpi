@@ -1,5 +1,6 @@
 const uacpi = @import("uacpi.zig");
 const namespace = @import("namespace.zig");
+const std = @import("std");
 
 pub const ResourceType = enum(u32) {
     irq,
@@ -67,7 +68,7 @@ pub const WakeCapability = enum(u8) {
     not_wake_capable,
     wake_capable,
 };
-pub const ResoruceSource = extern struct {
+pub const ResourceSource = extern struct {
     index: u8,
     index_present: bool,
     length: u16,
@@ -85,13 +86,13 @@ pub const Irq = extern struct {
     }
 };
 pub const ExtendedIrq = extern struct {
-    direction: u8 align(@alignOf(usize)),
+    direction: Direction align(@alignOf(usize)),
     trigger: Triggering,
     polarity: Polarity,
     sharing: Sharing,
     wake_capability: WakeCapability,
     num_irqs: u8,
-    source: ResoruceSource,
+    source: ResourceSource,
     pub fn irqs(self: *ExtendedIrq) []u32 {
         return @as([*]u32, @ptrCast(@as([*]align(4) u8, @ptrCast(self))[@sizeOf(ExtendedIrq)..]))[0..self.num_irqs];
     }
@@ -217,7 +218,7 @@ pub inline fn Address(I: type) type {
         maximum: I,
         translation_offset: I,
         address_length: I,
-        source: ResoruceSource,
+        source: ResourceSource,
     };
 }
 
@@ -229,16 +230,43 @@ pub const Addr64Extended = extern struct {
     maximum: u64,
     translation_offset: u64,
     address_length: u64,
-    attributes: u64,
+    attributes: packed union {
+        memory: std.os.uefi.tables.MemoryDescriptorAttribute,
+        other: u64,
+    },
 };
 
+pub const WriteStatus = packed struct(u8) {
+    writeable: bool,
+    _: u7 = 0,
+};
+
+pub fn Memory(I: type) type {
+    return extern struct {
+        write_status: WriteStatus align(@alignOf(usize)),
+        min: I,
+        max: I,
+        alignment: I,
+        length: I,
+    };
+}
+
 pub const FixedMem32 = extern struct {
-    write_status: packed struct(u8) {
-        writeable: bool,
-        _: u7 = 0,
-    } align(@alignOf(usize)),
+    write_status: WriteStatus align(@alignOf(usize)),
     addr: u32,
     length: u32,
+};
+
+pub const StartDependent = extern struct {
+    pub const Priority = enum(u8) {
+        good,
+        acceptable,
+        ok,
+    };
+
+    length_kind: LengthKind,
+    compatibility: Priority,
+    performance: Priority,
 };
 
 pub const Resource = union(ResourceType) {
@@ -255,11 +283,11 @@ pub const Resource = union(ResourceType) {
     addr32: *Address(u32),
     addr64: *Address(u64),
     addr64_extended: *Addr64Extended,
-    mem24,
-    mem32,
+    mem24: *Memory(u16),
+    mem32: *Memory(u32),
     fixed_mem32: *FixedMem32,
-    start_dependent,
-    end_dependent,
+    start_dependent: *StartDependent,
+    end_dependent: void,
     vendor_small,
     vendor_large,
     generic_register,
@@ -291,7 +319,7 @@ const ResourceNativeUnion: type = b: {
         name.* = fld.name;
         attr.* = .{ .@"align" = @alignOf(usize) };
     }
-    break :b @Union(.@"extern", null, names, types, attrs);
+    break :b @Union(.@"extern", null, &names, &types, &attrs);
 };
 
 pub const ResourceNative = extern struct {
@@ -302,7 +330,18 @@ pub const ResourceNative = extern struct {
     pub fn tagged(self: *ResourceNative) Resource {
         switch (self.typ) {
             .end_tag => unreachable,
-            inline else => |t| return if (@FieldType(Resource, @tagName(t)) == void) @unionInit(Resource, @tagName(t), {}) else @unionInit(Resource, @tagName(t), &@field(self.resource, @tagName(t))),
+            inline else => |t| return if (@FieldType(Resource, @tagName(t)) == void)
+                @unionInit(
+                    Resource,
+                    @tagName(t),
+                    {},
+                )
+            else
+                @unionInit(
+                    Resource,
+                    @tagName(t),
+                    &@field(self.resource, @tagName(t)),
+                ),
         }
     }
 };
@@ -315,11 +354,16 @@ pub const Resources = extern struct {
         remain_len: usize,
         ptr: [*]align(@alignOf(usize)) u8,
 
-        pub fn next(self: *Iterator) ?Resource {
+        pub fn next_raw(self: *Iterator) ?*ResourceNative {
             const native: *ResourceNative = @ptrCast(self.ptr);
             if (native.typ == .end_tag or self.remain_len == 0) return null;
             self.ptr = @alignCast(self.ptr + native.length);
             self.remain_len -|= native.length;
+            return native;
+        }
+
+        pub fn next(self: *Iterator) ?Resource {
+            const native: *ResourceNative = self.next_raw() orelse return null;
             return native.tagged();
         }
     };
@@ -339,6 +383,16 @@ extern fn uacpi_get_current_resources(n: *namespace.NamespaceNode, out_resources
 pub fn get_current_resources(node: *namespace.NamespaceNode) !?*Resources {
     var r: *Resources = undefined;
     uacpi_get_current_resources(node, &r).err() catch |err| switch (err) {
+        error.NotFound => return null,
+        else => return err,
+    };
+    return r;
+}
+
+extern fn uacpi_get_possible_resources(n: *namespace.NamespaceNode, out_resources: **Resources) callconv(.c) uacpi.uacpi_status;
+pub fn get_possible_resources(node: *namespace.NamespaceNode) !?*Resources {
+    var r: *Resources = undefined;
+    uacpi_get_possible_resources(node, &r).err() catch |err| switch (err) {
         error.NotFound => return null,
         else => return err,
     };
