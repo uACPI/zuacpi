@@ -84,3 +84,28 @@ pub fn get_namespace_node_info(node: *namespace.NamespaceNode) error{OutOfMemory
     try @as(error{OutOfMemory}!void, @errorCast(uacpi_get_namespace_node_info(node, &info).err()));
     return info;
 }
+
+pub const PciRoutingTableEntry = extern struct {
+    address: u32,
+    index: u32,
+    source: ?*namespace.NamespaceNode,
+    pin: u8,
+};
+
+pub const PciRoutingTable = extern struct {
+    count: usize,
+
+    pub fn entries(self: *const PciRoutingTable) []const PciRoutingTableEntry {
+        return @as([*]PciRoutingTableEntry, @ptrCast(@as([*]align(8) u8, @ptrCast(self)) + @sizeOf(usize)))[0..self.count];
+    }
+
+    extern fn uacpi_free_pci_routing_table(table: *const PciRoutingTable) callconv(.c) void;
+    pub const deinit = uacpi_free_pci_routing_table;
+};
+
+extern fn uacpi_get_pci_routing_table(parent: *namespace.NamespaceNode, out_table: **PciRoutingTable) uacpi.uacpi_status;
+pub fn get_pci_routing_table(bus: *namespace.NamespaceNode) !*PciRoutingTable {
+    var tbl: *PciRoutingTable = undefined;
+    try uacpi_get_pci_routing_table(bus, &tbl).err();
+    return tbl;
+}
