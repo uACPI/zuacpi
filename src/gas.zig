@@ -25,7 +25,7 @@ pub const Gas = extern struct {
         qword = 4,
         _,
     },
-    address: packed union {
+    address: packed union(u64) {
         system_memory: u64,
         system_io: u64,
         // pci_config_space

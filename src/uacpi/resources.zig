@@ -230,7 +230,7 @@ pub const Addr64Extended = extern struct {
     maximum: u64,
     translation_offset: u64,
     address_length: u64,
-    attributes: packed union {
+    attributes: packed union(u64) {
         memory: std.os.uefi.tables.MemoryDescriptorAttribute,
         other: u64,
     },
