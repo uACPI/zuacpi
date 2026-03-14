@@ -39,7 +39,13 @@ pub const ObjectTypeIndexer = std.enums.EnumIndexer(ObjectType);
 pub const ObjectTypeSet = std.EnumSet(ObjectType);
 pub const ObjectTypeBits = @TypeOf(ObjectTypeSet.initEmpty().bits);
 
-pub const Object = opaque {};
+pub const Object = opaque {
+    extern fn uacpi_object_unref(obj: *Object) callconv(.c) void;
+    pub const unref = uacpi_object_unref;
+
+    extern fn uacpi_object_get_type(obj: *Object) callconv(.c) ObjectType;
+    pub const get_type = uacpi_object_get_type;
+};
 
 pub const log_level = enum(u32) {
     err = 1,
