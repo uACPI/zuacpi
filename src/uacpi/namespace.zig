@@ -27,8 +27,10 @@ pub const NamespaceNode = opaque {
         try uacpi_namespace_for_each_child(parent, descending_cb, ascending_cb, types, max_depth, user).err();
     }
 
-    extern fn uacpi_namespace_node_name(node: *const NamespaceNode) callconv(.c) [4]u8;
-    pub const name = uacpi_namespace_node_name;
+    extern fn uacpi_namespace_node_name(node: *const NamespaceNode) callconv(.c) u32;
+    pub fn name(node: *const NamespaceNode) [4]u8 {
+        return @bitCast(uacpi_namespace_node_name(node));
+    }
 
     extern fn uacpi_namespace_node_generate_absolute_path(node: *const NamespaceNode) callconv(.c) ?[*:0]const u8;
     pub fn generate_absolute_path(node: *const NamespaceNode) error{OutOfMemory}![:0]const u8 {
