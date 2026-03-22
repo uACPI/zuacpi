@@ -6,6 +6,7 @@ pub const mcfg = @import("mcfg.zig");
 pub const hpet = @import("hpet.zig");
 pub const fadt = @import("fadt.zig");
 pub const gtdt = @import("gtdt.zig");
+pub const iort = @import("iort.zig");
 
 pub const Gas = @import("gas.zig").Gas;
 
