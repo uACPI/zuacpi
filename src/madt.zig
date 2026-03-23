@@ -183,6 +183,16 @@ pub fn MadtEntryPayload(comptime t: MadtEntryType) type {
             discovery_base_addr: u64 align(4),
             discovery_length: u32,
         },
+        .gic_interrupt_translation_service => extern struct {
+            header: MadtEntryHeader,
+            flags: packed struct(u8) {
+                non_coherent: bool,
+                _: u7 = 0,
+            } align(1),
+            id: u32,
+            base_addr: u64,
+            _: u32,
+        },
         else => extern struct {
             header: MadtEntryHeader,
         },
