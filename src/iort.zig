@@ -58,6 +58,24 @@ pub const Iort = extern struct {
             its_id: u32,
         };
 
+        pub const MemoryAccess = extern struct {
+            cca: u32,
+            allocation_hints: packed struct(u8) {
+                transient: bool,
+                write_allocate: bool,
+                read_allocate: bool,
+                override: bool,
+                _: u4 = 0,
+            },
+            _: [2]u8,
+            flags: packed struct(u8) {
+                cpm: bool,
+                dacs: bool,
+                canwbs: bool,
+                _: u5 = 0,
+            },
+        };
+
         pub const PciRootComplex = extern struct {
             node: Node,
             memory_properties: u64 align(4),
@@ -67,6 +85,23 @@ pub const Iort = extern struct {
             pasid: u16 align(1),
             _: u8 = 0,
             flags: u32,
+        };
+
+        pub const NamedComponent = extern struct {
+            node: Node,
+            flags: packed struct(u32) {
+                stall: bool,
+                substream_bits: u5,
+                _: u26 = 0,
+            },
+            access: MemoryAccess,
+            address_size_limit_bits: u8,
+
+            pub fn name(self: *const NamedComponent) []const u8 {
+                const bytes: [*]const u8 = @ptrCast(self);
+                const slc = bytes[29..self.node.length];
+                return std.mem.sliceTo(slc, 0);
+            }
         };
 
         pub fn ids(self: *const Node) []const Id {
