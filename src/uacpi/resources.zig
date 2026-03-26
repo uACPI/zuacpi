@@ -75,18 +75,19 @@ pub const ResourceSource = extern struct {
     string: [*:0]u8,
 };
 pub const Irq = extern struct {
-    length_kind: LengthKind align(@alignOf(usize)),
+    length_kind: LengthKind,
     trigger: Triggering,
     polarity: Polarity,
     sharing: Sharing,
     wake_capability: WakeCapability,
     num_irqs: u8,
-    pub fn irqs(self: *align(1) Irq) []u8 {
+    pub fn irqs(self: *Irq) []u8 {
         return @as([*]u8, @ptrCast(self))[@sizeOf(Irq)..][0..self.num_irqs];
     }
 };
+
 pub const ExtendedIrq = extern struct {
-    direction: Direction align(@alignOf(usize)),
+    direction: Direction,
     trigger: Triggering,
     polarity: Polarity,
     sharing: Sharing,
@@ -97,17 +98,20 @@ pub const ExtendedIrq = extern struct {
         return @as([*]u32, @ptrCast(@as([*]align(4) u8, @ptrCast(self))[@sizeOf(ExtendedIrq)..]))[0..self.num_irqs];
     }
 };
+
 pub const TransferType = enum(u8) {
     eight_bit,
     eight_and_sixteen_bit,
     sixteen_bit,
 };
+
 pub const ChannelSpeed = enum(u8) {
     compatibility,
     type_a,
     type_b,
     type_f,
 };
+
 pub const TransferWidth = enum(u8) {
     @"8",
     @"16",
@@ -116,8 +120,9 @@ pub const TransferWidth = enum(u8) {
     @"128",
     @"256",
 };
+
 pub const Dma = extern struct {
-    transfer_type: TransferType align(@alignOf(usize)),
+    transfer_type: TransferType,
     bus_master_status: bool,
     channel_speed: ChannelSpeed,
     num_channels: u8,
@@ -126,24 +131,28 @@ pub const Dma = extern struct {
         return @as([*]u8, @ptrCast(self))[@sizeOf(Dma)..][0..self.num_irqs];
     }
 };
+
 pub const FixedDma = extern struct {
-    request_line: u16 align(@alignOf(usize)),
+    request_line: u16,
     channel: u16,
     transfer_width: TransferWidth,
 };
+
 pub const IoDecodeType = enum(u8) {
     decode_10,
     decode_16,
 };
+
 pub const Io = extern struct {
-    decode_type: IoDecodeType align(@alignOf(usize)),
+    decode_type: IoDecodeType,
     minimum: u16,
     maximum: u16,
     alignment: u8,
     length: u8,
 };
+
 pub const FixedIo = extern struct {
-    address: u16 align(@alignOf(usize)),
+    address: u16,
     length: u8,
 };
 
@@ -212,7 +221,7 @@ pub const AddressCommon = extern struct {
 
 pub inline fn Address(I: type) type {
     return extern struct {
-        common: AddressCommon align(@alignOf(usize)),
+        common: AddressCommon,
         granularity: I,
         minimum: I,
         maximum: I,
@@ -223,7 +232,7 @@ pub inline fn Address(I: type) type {
 }
 
 pub const Addr64Extended = extern struct {
-    common: AddressCommon align(@alignOf(usize)),
+    common: AddressCommon,
     revision_id: u8,
     granularity: u64,
     minimum: u64,
@@ -243,7 +252,7 @@ pub const WriteStatus = packed struct(u8) {
 
 pub fn Memory(I: type) type {
     return extern struct {
-        write_status: WriteStatus align(@alignOf(usize)),
+        write_status: WriteStatus,
         min: I,
         max: I,
         alignment: I,
@@ -252,7 +261,7 @@ pub fn Memory(I: type) type {
 }
 
 pub const FixedMem32 = extern struct {
-    write_status: WriteStatus align(@alignOf(usize)),
+    write_status: WriteStatus,
     addr: u32,
     length: u32,
 };
@@ -323,7 +332,7 @@ const ResourceNativeUnion: type = b: {
 };
 
 pub const ResourceNative = extern struct {
-    typ: ResourceType align(@alignOf(usize)),
+    typ: ResourceType,
     length: u32,
     resource: ResourceNativeUnion,
 
