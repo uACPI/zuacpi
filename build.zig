@@ -49,13 +49,14 @@ pub fn build(b: *Build) void {
         .optimize = optimize,
     });
 
-    var flags_list: std.ArrayList([]const u8) = std.ArrayList([]const u8).initCapacity(b.allocator, 6) catch @panic("OOM");
+    var flags_list: std.ArrayList([]const u8) = std.ArrayList([]const u8).initCapacity(b.allocator, 7) catch @panic("OOM");
 
     flags_list.appendSliceAssumeCapacity(&.{
         "-ffreestanding",
         "-nostdlib",
         "-DUACPI_SIZED_FREES",
         b.fmt("-DUACPI_DEFAULT_LOG_LEVEL=UACPI_LOG_{s}", .{std.ascii.allocUpperString(b.allocator, @tagName(uacpi_log_level)) catch @panic("OOM")}),
+        "-DUACPI_END_OF_LOG_MSG=\"\"",
     });
 
     if (override_arch_helpers) {

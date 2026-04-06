@@ -4,8 +4,8 @@
     .fingerprint = 0xf813a5ae280702fb,
     .dependencies = .{
         .uacpi = .{
-            .url = "git+https://github.com/uACPI/uACPI?ref=4.0.0#e05715b2e6a3ae913aecdb86f4fd2dba30304e45",
-            .hash = "N-V-__8AACf_EwAqU0c833d6mIfScf7rsW0lDps-JYnPWiqY",
+            .url = "git+https://github.com/uACPI/uACPI?ref=for-5.0#d901d5019e4d1fd7ec5a02396652107e9307e67a",
+            .hash = "N-V-__8AAGQMFADs2uUEwlaK6yALKKQdixsmlc06wGmFvZC0",
         },
     },
     .paths = .{
