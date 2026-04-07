@@ -169,8 +169,6 @@ pub const NamespaceNode = opaque {
     extern fn uacpi_namespace_root() callconv(.c) *NamespaceNode;
     pub const root = uacpi_namespace_root;
 
-
-
     extern fn uacpi_eval_simple_integer(parent: *NamespaceNode, path: [*:0]const u8, out_value: *u64) callconv(.c) uacpi.uacpi_status;
     pub fn eval_simple_integer(parent: *NamespaceNode, path: [:0]const u8) !u64 {
         var out: u64 = undefined;
@@ -233,8 +231,6 @@ pub const NamespaceNode = opaque {
         };
         return r;
     }
-
-
 };
 
 extern fn uacpi_free_absolute_path(path: [*:0]const u8) callconv(.c) void;
