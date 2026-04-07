@@ -25,6 +25,7 @@ pub const Srat = extern struct {
             generic_initiator = 5,
             generic_port = 6,
             rintc = 7,
+            _,
         };
 
         type: Type,
