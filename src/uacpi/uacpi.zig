@@ -2,50 +2,12 @@ pub const tables = @import("tables.zig");
 pub const event = @import("event.zig");
 pub const utilities = @import("utilities.zig");
 pub const namespace = @import("namespace.zig");
-pub const eval = @import("eval.zig");
 pub const resources = @import("resources.zig");
-pub const object = @import("object.zig");
+pub const Object = @import("object.zig").Object;
 pub const sleep = @import("sleep.zig");
 pub const osi = @import("osi.zig");
 
-comptime {
-    _ = resources;
-}
-
 const std = @import("std");
-
-pub const ObjectType = enum(u32) {
-    uninitialized,
-    integer,
-    string,
-    buffer,
-    package,
-    field_unit,
-    device,
-    event,
-    method,
-    mutex,
-    operation_region,
-    power_resource,
-    processor,
-    thermal_zone,
-    buffer_field,
-    debug = 16,
-    reference = 20,
-    buffer_index = 21,
-};
-
-pub const ObjectTypeIndexer = std.enums.EnumIndexer(ObjectType);
-pub const ObjectTypeSet = std.EnumSet(ObjectType);
-pub const ObjectTypeBits = @TypeOf(ObjectTypeSet.initEmpty().bits);
-
-pub const Object = opaque {
-    extern fn uacpi_object_unref(obj: *Object) callconv(.c) void;
-    pub const unref = uacpi_object_unref;
-
-    extern fn uacpi_object_get_type(obj: *Object) callconv(.c) ObjectType;
-    pub const get_type = uacpi_object_get_type;
-};
 
 pub const log_level = enum(u32) {
     err = 1,

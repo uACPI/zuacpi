@@ -387,23 +387,3 @@ pub const Resources = extern struct {
     extern fn uacpi_free_resources(r: *Resources) callconv(.c) void;
     pub const deinit = uacpi_free_resources;
 };
-
-extern fn uacpi_get_current_resources(n: *namespace.NamespaceNode, out_resources: **Resources) callconv(.c) uacpi.uacpi_status;
-pub fn get_current_resources(node: *namespace.NamespaceNode) !?*Resources {
-    var r: *Resources = undefined;
-    uacpi_get_current_resources(node, &r).err() catch |err| switch (err) {
-        error.NotFound => return null,
-        else => return err,
-    };
-    return r;
-}
-
-extern fn uacpi_get_possible_resources(n: *namespace.NamespaceNode, out_resources: **Resources) callconv(.c) uacpi.uacpi_status;
-pub fn get_possible_resources(node: *namespace.NamespaceNode) !?*Resources {
-    var r: *Resources = undefined;
-    uacpi_get_possible_resources(node, &r).err() catch |err| switch (err) {
-        error.NotFound => return null,
-        else => return err,
-    };
-    return r;
-}

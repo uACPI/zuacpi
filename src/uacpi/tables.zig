@@ -3,13 +3,31 @@ const uacpi = zuacpi.uacpi;
 const sdt = zuacpi.sdt;
 const fadt = zuacpi.fadt;
 
-pub const uacpi_table = extern struct {
+pub const Table = extern struct {
     location: extern union {
         virt_addr: u64,
         ptr: *align(1) anyopaque,
         hdr: *align(1) const sdt.SystemDescriptorTableHeader,
     },
     index: usize,
+
+    extern fn uacpi_table_find_by_signature(signature: *const [4]u8, out_table: *Table) callconv(.c) uacpi.uacpi_status;
+    pub fn find_table_by_signature(signature: sdt.Signature) !Table {
+        var t: Table = undefined;
+        try uacpi_table_find_by_signature(&signature.to_string(), &t).err();
+        return t;
+    }
+
+    extern fn uacpi_table_ref(*Table) callconv(.c) uacpi.uacpi_status;
+    extern fn uacpi_table_unref(*Table) callconv(.c) uacpi.uacpi_status;
+
+    pub fn unref(tbl: *Table) !void {
+        return uacpi_table_unref(tbl).err();
+    }
+
+    pub fn ref(tbl: *Table) !void {
+        return uacpi_table_ref(tbl).err();
+    }
 };
 
 pub const TableInstallationDisposition = enum(u32) {
@@ -24,24 +42,6 @@ extern fn uacpi_set_table_installation_handler(handler: TableInstallationHandler
 
 pub fn set_table_installation_handler(handler: TableInstallationHandler) !void {
     return uacpi_set_table_installation_handler(handler).err();
-}
-
-extern fn uacpi_table_find_by_signature(signature: *const [4]u8, out_table: *uacpi_table) callconv(.c) uacpi.uacpi_status;
-pub fn find_table_by_signature(signature: sdt.Signature) !uacpi_table {
-    var t: uacpi_table = undefined;
-    try uacpi_table_find_by_signature(&signature.to_string(), &t).err();
-    return t;
-}
-
-extern fn uacpi_table_ref(*uacpi_table) callconv(.c) uacpi.uacpi_status;
-extern fn uacpi_table_unref(*uacpi_table) callconv(.c) uacpi.uacpi_status;
-
-pub fn table_unref(tbl: *uacpi_table) !void {
-    return uacpi_table_unref(tbl).err();
-}
-
-pub fn table_ref(tbl: *uacpi_table) !void {
-    return uacpi_table_ref(tbl).err();
 }
 
 extern fn uacpi_table_fadt(tbl: **fadt.Fadt) callconv(.c) uacpi.uacpi_status;

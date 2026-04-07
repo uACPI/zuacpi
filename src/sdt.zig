@@ -15,6 +15,7 @@ pub const Signature = enum(u32) {
     BGRT = cast_signature("BGRT"),
     GTDT = cast_signature("GTDT"),
     IORT = cast_signature("IORT"),
+    SRAT = cast_signature("SRAT"),
     _,
 
     pub fn from_string(sig: *const [4]u8) Signature {

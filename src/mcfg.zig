@@ -10,7 +10,7 @@ pub const Mcfg = extern struct {
     }
 };
 
-const RawPciHostBridge = extern struct {
+pub const RawPciHostBridge = extern struct {
     base: u64,
     segment_group: u16,
     bus_start: u8,
