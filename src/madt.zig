@@ -48,7 +48,7 @@ pub const MadtEntryType = enum(u8) {
     io_sapic = 0x6,
     local_sapic = 0x7,
     platform_interrupt_sources = 0x8,
-    proc_local_x2apic = 0x9,
+    local_x2apic = 0x9,
     local_x2apic_nmi = 0xA,
     gic_cpu_interface = 0xB,
     gic_distributor = 0xC,
@@ -118,11 +118,28 @@ pub fn MadtEntryPayload(comptime t: MadtEntryType) type {
                 _: u30,
             },
         },
+        .local_x2apic => extern struct {
+            header: MadtEntryHeader align(4),
+            local_apic_id: u32,
+            flags: packed struct(u32) {
+                enabled: bool,
+                online_capable: bool,
+                _: u30,
+            },
+            processor_uid: u32,
+        },
         .lapic_nmi => extern struct {
             header: MadtEntryHeader align(4),
             processor_uid: u8,
             flags: MadtInterruptSourceFlags align(1),
             pin: u8,
+        },
+        .local_x2apic_nmi => extern struct {
+            header: MadtEntryHeader align(4),
+            flags: MadtInterruptSourceFlags align(2),
+            processor_uid: u32,
+            pin: u8,
+            _res0: u8 = 0,
         },
         .local_apic_addr_override => extern struct {
             header: MadtEntryHeader align(4),
