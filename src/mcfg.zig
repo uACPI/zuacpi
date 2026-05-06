@@ -3,7 +3,7 @@ const sdt = @import("sdt.zig");
 
 pub const Mcfg = extern struct {
     header: sdt.SystemDescriptorTableHeader,
-    _: [8]u8 align(1) = [_]u8{0} ** 8,
+    _: [8]u8 align(1) = @splat(0),
 
     pub fn bridges(self: *align(1) const Mcfg) []align(1) const RawPciHostBridge {
         return std.mem.bytesAsSlice(RawPciHostBridge, @as([*]const u8, @ptrCast(self))[@sizeOf(Mcfg)..self.header.length]);
